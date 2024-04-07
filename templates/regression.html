@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auto ML</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">ResSim</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Home</a>
+              </li>
+              <!-- <li class="nav-item">
+                <a class="nav-link" href="#">Link</a>
+              </li> -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Select Task
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/classification">Classification task</a></li>
+                  <li><a class="dropdown-item" href="/regression">Regression task</a></li>
+                  <!-- <li><hr class="dropdown-divider"></li> -->
+                  <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+              </li>
+            </ul>
+            <form class="d-flex" role="search">
+              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+          </div>
+        </div>
+      </nav>
+
+    <center>
+
+        <h1>Regression Task</h1>
+    </center>
+
+    <div class="container p-4" >
+        
+        <div class="row">
+            
+            <div class="col-md-4"></div>
+            <div class="col-md-4 p-2" style='border: solid red ;border-radius: 2mm;' >
+                
+                <form action="" method="post" enctype="multipart/form-data">{% csrf_token %}
+                    
+                    <label for="form-select" style="font-weight: 300;">Select Model </label>
+                    <select name='reg_task' class="form-select" aria-label="Default select example">
+                        <!-- <option selected>Select Model </option> -->
+                       
+                        <option value="lr">Best Model</option>
+                        <option value="Prophet" selected>Prophet Model </option>
+                        <option value="ML">ML models</option>
+                        <option value="VAR">VAR Model</option>
+                        <option value="auto_SARIMAX">SARIMAX</option>
+                    </select>
+
+                    <p></p>
+                    <label for="form-select" style="font-weight: 300;">Data Format </label>
+                    <select name='data_format' class="form-select" aria-label="Default select example">
+                        <!-- <option selected>Select Model </option> -->
+                       
+                        <option value="H">Hourly</option>
+                        <option value="D" selected >Daily </option>
+                        <option value="W">Weekly </option>
+                        <option value="M">Monthly</option>
+                        <option value="Y">Yearly</option>
+                        <option value="Q">Quarterly</option>
+                      
+                    </select>
+
+                    <p></p>
+                    <label for="form-select" style="font-weight: 300;">Stopping Criteria</label>
+                    <select name='stop' class="form-select" aria-label="Default select example">
+                        <!-- <option selected>Select Model </option> -->
+                       
+                        <option value="rmse" selected>RMSE</option>
+                        <option value="normalized_rmse"  >Normalised RMSE</option>
+                       
+                      
+                    </select>
+
+                    {% comment %} <label for="training-percentage" style="font-weight: 300;">Training percentage</label>
+                    <select name="training_percentage" id="training-percentage" class="form-select" aria-label="Training percentage">
+                       
+                        
+                    </select> {% endcomment %}
+
+
+                <p></p>
+
+                <div class="container mt-5">
+                  <div class="form-group form-check">
+                      <input type="checkbox" name="season" class="form-check-input" id="exampleCheck1">
+                      <label class="form-check-label" for="exampleCheck1">Seasionality </label>
+                  </div>
+              </div>
+                    <label for="csv" style="font-weight: 300;">Upload data in csv file format</label>
+                
+                    <p> <span style="color: red;">*</span> csv file should contains only 2 columns Date and Discharge</p>
+                    
+                    <input  type="file" name="csv_name" accept=".csv" placeholder="" />
+                    <p></p>
+                    
+                    <button type="submit" class="btn btn-primary" >Upload !</button>
+                </form>
+            </div>
+            <div class="col-md-4"></div>
+            </div>
+</div>
+
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<head>
+    <meta charset="utf-8" />   <!--It is necessary to use the UTF-8 encoding with plotly graphics to get e.g. negative signs to render correctly -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    </head>
+{{fig}}
+{% endblock content %}
