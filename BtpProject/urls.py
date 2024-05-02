@@ -22,7 +22,12 @@ urlpatterns = [
     path("", home_page,name='home_name'),
     # path("classification", classification_view,name='cls_name'),
     path("tsa", regression_view,name='reg_name'),
+    path('model_selection',model_selection_view,name='model_selection_name'),
     path("data", data_view,name='data_name'),
     path("plot", plotly_view,name='plotly_name'),
+    path('train_data',plotly_train,name='train_data_name'),
+    path('test_data',plotly_test,name='test_data_name'),
+    path('pred_data',plotly_pred,name='pred_data_name'),
+    path('temp',temp_op,name='temp_name')
 
 ]

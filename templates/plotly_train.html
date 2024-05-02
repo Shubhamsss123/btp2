@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Train Data{% endblock title %}
+{% block content %}
+
+
+    <div class="row m-2">
+        <div class="col-md-4 col">
+            <a href="temp" class="btn btn-secondary">Back</a>
+        </div>
+        <div class="col-md-3 col">
+            <div class="shadow p-3 mb-5 bg-white rounded">
+                <form method="GET" action="train_data">
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-4 col"></div>
+    </div>
+    
+    
+    {{ chart|safe }}
+{% endblock content %}

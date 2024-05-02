@@ -1,7 +1,7 @@
 from django.shortcuts import render,HttpResponse 
 import plotly.express as px
 from datetime import timedelta,datetime
-
+from .forms import DateForm
 
 import pandas as pd
 import numpy as np 
@@ -24,6 +24,10 @@ def temp(request):
 def home_page(request):
 
     return render(request,'home.html')
+
+def model_selection_view(request):
+
+    return render(request,'model_select.html')
 
 def classification_view(request):
     return render(request,'classification.html')
@@ -270,7 +274,7 @@ def ann_bayesian(raw_seq,train_len):
         early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0, restore_best_weights=True)
 
         # Fit the model
-        ann_model.fit(X_train.reshape((X_train.shape[0], n_steps)), y_train,validation_split=0.3, verbose=0, epochs=30,callbacks=[early_stopping])
+        ann_model.fit(X_train.reshape((X_train.shape[0], n_steps)), y_train,validation_split=0.3, verbose=0, epochs=500,callbacks=[early_stopping])
         
         # Predict on the test set and calculate R^2 score
         yhat = ann_model.predict(X_test.reshape((X_test.shape[0], n_steps)), verbose=0)
@@ -280,8 +284,9 @@ def ann_bayesian(raw_seq,train_len):
 
     # Define the search space for Hyperopt
     ann_space = {
-        'n_units': hp.choice('n_units', [32, 64, 128]),
-        'learning_rate': hp.uniform('learning_rate', 0.001, 0.01),
+        'n_units': hp.choice('n_units', [8,16,32]),
+        # 'learning_rate': hp.uniform('learning_rate', 0.001, 0.01),
+        'learning_rate': hp.uniform('learning_rate', 0.001),
         'n_steps':  hp.choice('n_steps', [3, 5, 7]),
         'n_features': 1,
 
@@ -295,7 +300,7 @@ def ann_bayesian(raw_seq,train_len):
 
     # Use the best hyperparameters to build the final ANN model
     best_params = {
-        'n_units': [32, 64, 128][best['n_units']],
+        'n_units': [8,16,32][best['n_units']],
         'learning_rate': best['learning_rate'],
         'n_steps': [3, 5, 7][best['n_steps']],
         'n_features': 1,
@@ -457,7 +462,7 @@ def data_view(request):
 
 
                     # model.fit(X_train, y_train, epochs=10, verbose=1)
-                    model.fit(X_train, y_train, validation_split=0.3,epochs=30, verbose=0,callbacks=[early_stopping])
+                    model.fit(X_train, y_train, validation_split=0.3,epochs=500, verbose=0,callbacks=[early_stopping])
 
                 else:
 
@@ -484,7 +489,7 @@ def data_view(request):
                     early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0, restore_best_weights=True)
 
                     # Fit the final model
-                    model.fit(X_train.reshape((X_train.shape[0], best_params['n_steps'])), y_train, validation_split=0.3,verbose=0, epochs=30,callbacks=[early_stopping])
+                    model.fit(X_train.reshape((X_train.shape[0], best_params['n_steps'])), y_train, validation_split=0.3,verbose=0, epochs=500,callbacks=[early_stopping])
 
             else:
 
@@ -535,32 +540,35 @@ def data_view(request):
 
             df_metric=evaluate_model_df(model, X_train, y_train, X_test, y_test)
         
-            plt.plot(date_train[::300],y_train[::300],label='actual values')
-            plt.plot(date_train[::300],pred_train[::300],c='r',label='prediction')
-            plt.title(model_dict[ml_task]+" Train")
-            plt.xlabel('per 300 days dates')
-            plt.ylabel('discharge (m3/h)')
-            plt.xticks(rotation=40)
+            # plt.plot(date_train[::300],y_train[::300],label='actual values')
+            # plt.plot(date_train[::300],pred_train[::300],c='r',label='prediction')
+            # plt.title(model_dict[ml_task]+" Train")
+            # plt.xlabel('per 300 days dates')
+            # plt.ylabel('discharge (m3/h)')
+            # plt.xticks(rotation=40)
             
-            plt.tight_layout()
+            # plt.tight_layout()
 
-            plt.legend()
-            plt.savefig('BtpProject/static/plots/ml_train.png')
-            plt.close()
-
+            # plt.legend()
+            # plt.savefig('BtpProject/static/plots/ml_train.png')
+            # plt.close()
+            print(pred_train.shape,f'pred train {date_train.shape} date_train  {y_train.shape} y_train,for lstm')
+            
+            pd.DataFrame({'date':date_train,'y_train':y_train,'pred_train':pred_train.flatten()}).to_csv(f'csv_files/train.csv',index=None)
+            pd.DataFrame({'date':date_test,'y_test':y_test,'pred_test':pred.flatten()}).to_csv(f'csv_files/test.csv',index=None)
             # plt.figure(figsize=(5,7))
             # fig.autofmt_xdate()
-            plt.plot(date_test[::200],y_test[::200],label='actual values')
-            plt.plot(date_test[::200],pred[::200],c='r',label='prediction')
+            # plt.plot(date_test[::200],y_test[::200],label='actual values')
+            # plt.plot(date_test[::200],pred[::200],c='r',label='prediction')
         
-            plt.title(model_dict[ml_task]+" Test")
-            plt.xlabel('per 200 days dates')
-            plt.ylabel('discharge (m3/h)')
-            plt.xticks(rotation=40)
-            plt.legend()
-            plt.tight_layout()
-            plt.savefig('BtpProject/static/plots/ml_test.png')
-            plt.close()
+            # plt.title(model_dict[ml_task]+" Test")
+            # plt.xlabel('per 200 days dates')
+            # plt.ylabel('discharge (m3/h)')
+            # plt.xticks(rotation=40)
+            # plt.legend()
+            # plt.tight_layout()
+            # plt.savefig('BtpProject/static/plots/ml_test.png')
+            # plt.close()
             future_pred = []
             last_n = X_test[-1].copy()
 
@@ -576,24 +584,153 @@ def data_view(request):
           
                 
 
-            df_pred=pd.DataFrame({'Date':future_30dates,'prediction':future_pred})
+            df_pred=pd.DataFrame({'date':future_30dates,'pred':future_pred})
+            df_pred.to_csv(f'csv_files/pred.csv',index=None)
 
+            df_metric.to_csv(f'csv_files/metric.csv',index=None)
             # fig_train = px.scatter(x=date_train, y=y_train)
-            plt.plot(df_pred['Date'],df_pred['prediction'],label='predicted values')
+            # plt.plot(df_pred['Date'],df_pred['prediction'],label='predicted values')
            
         
-            plt.title(model_dict[ml_task]+" prediction")
-            plt.xlabel('1 month')
-            plt.ylabel('discharge (m3/h)')
-            plt.xticks(rotation=40)
-            plt.legend()
-            plt.tight_layout()
-            plt.savefig('BtpProject/static/plots/ml_pred.png')
-            plt.close()
-            return render(request,'model_op.html',{'df_metric':df_metric,'df_pred':df_pred})
+            # plt.title(model_dict[ml_task]+" prediction")
+            # plt.xlabel('1 month')
+            # plt.ylabel('discharge (m3/h)')
+            # plt.xticks(rotation=40)
+            # plt.legend()
+            # plt.tight_layout()
+            # plt.savefig('BtpProject/static/plots/ml_pred.png')
+            # plt.close()
+            df1=pd.read_csv('csv_files/metric.csv')
+            return render(request,'model_op.html',{'df':df1})
+            # return HttpResponse('csv files saved')
         else:
             return HttpResponse('csv file is not uploaded ')
 
-    
+def temp_op(request):
+    df=pd.read_csv('csv_files/metric.csv')
+    return render(request,'model_op.html',{'df':df})
+import plotly.express as px
 
-    
+# Create your views here.
+def plotly_train(request):
+
+    df=pd.read_csv('csv_files/train.csv')
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+
+    df['date']=pd.to_datetime(df['date'])
+
+    if start and end:
+        # Convert start and end dates to datetime objects
+        start_date = pd.to_datetime(start)
+        end_date = pd.to_datetime(end)
+
+        # Filter DataFrame based on date range
+        filtered_df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+    else:
+        # If start or end date is not provided, use the entire DataFrame
+        filtered_df = df
+
+    fig = px.line(
+        filtered_df,  # Use the filtered DataFrame for plotting
+        x='date',     # Assuming 'date' is the column name for dates
+        y='y_train',  # Assuming 'average' is the column name for CO2 PPM
+        title="Train data ",
+        labels={'date': 'Date', 'discharge': 'discharge label'}
+    )
+    fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_train'], mode='lines', name='Predicted Discharge')
+
+    fig.update_layout(
+        title={
+            'font_size': 24,
+            'xanchor': 'center',
+            'x': 0.5
+        }
+    )
+
+    chart = fig.to_html()
+    context = {'chart': chart, 'form': DateForm()}  # Assuming DateForm is passed to the context
+    return render(request, 'plotly_train.html', context)
+def plotly_test(request):
+
+    df=pd.read_csv('csv_files/test.csv')
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+
+    df['date']=pd.to_datetime(df['date'])
+
+    if start and end:
+        # Convert start and end dates to datetime objects
+        start_date = pd.to_datetime(start)
+        end_date = pd.to_datetime(end)
+
+        # Filter DataFrame based on date range
+        filtered_df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+    else:
+        # If start or end date is not provided, use the entire DataFrame
+        filtered_df = df
+
+    fig = px.line(
+        filtered_df,  # Use the filtered DataFrame for plotting
+        x='date',     # Assuming 'date' is the column name for dates
+        y='y_test',  # Assuming 'average' is the column name for CO2 PPM
+        title="test data ",
+        labels={'date': 'Date', 'discharge': 'discharge label'}
+    )
+    fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_test'], mode='lines', name='Predicted Discharge')
+
+    fig.update_layout(
+        title={
+            'font_size': 24,
+            'xanchor': 'center',
+            'x': 0.5
+        }
+    )
+
+    chart = fig.to_html()
+    context = {'chart': chart, 'form': DateForm()}  # Assuming DateForm is passed to the context
+    return render(request, 'plotly_train.html', context)
+def plotly_pred(request):
+
+    df=pd.read_csv('csv_files/pred.csv')
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+
+    df['date']=pd.to_datetime(df['date'])
+
+    if start and end:
+        # Convert start and end dates to datetime objects
+        start_date = pd.to_datetime(start)
+        end_date = pd.to_datetime(end)
+
+        # Filter DataFrame based on date range
+        filtered_df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+    else:
+        # If start or end date is not provided, use the entire DataFrame
+        filtered_df = df
+
+    fig = px.line(
+        filtered_df,  # Use the filtered DataFrame for plotting
+        x='date',     # Assuming 'date' is the column name for dates
+        y='pred',  # Assuming 'average' is the column name for CO2 PPM
+        title="prediction data ",
+        labels={'date': 'Date', 'discharge': 'discharge label'}
+    )
+    # fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_test'], mode='lines', name='Predicted Discharge')
+
+    fig.update_layout(
+        title={
+            'font_size': 24,
+            'xanchor': 'center',
+            'x': 0.5
+        }
+    )
+
+    chart = fig.to_html()
+    context = {'chart': chart, 'form': DateForm()}  # Assuming DateForm is passed to the context
+    return render(request, 'plotly_train.html', context)
+
+def select_view(request):
+    df = pd.read_csv('csv_files/metric.csv')
+    context = {'df': df}
+    return render(request, 'model_op.html', context)

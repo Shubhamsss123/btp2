@@ -1,98 +1,43 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Output {% endblock title %}
-
+{% block title %}select options{% endblock title %}
 {% block content %}
 
+{% comment %} <p>[{{df.columns}}</p> {% endcomment %}
 
-{% load static %}
-
-<style>
-    table, th, td {
-        border: 1px solid white;
-        border-collapse: collapse;
-      }
-      th, td {
-        background-color: #a9d6d6;
-      }
-</style>
-
-<div class="container">
-
-    <center>
-    
-  
- <img src="{% static 'plots/ml_train.png'%}" alt="">
-
-    <img src="{% static 'plots/ml_test.png'%}" alt="">
-</center>
-    </div>
-
-
-    <center>
-
-    
-    <div class="container my-4">
-
-        <table>
- 
-            <thead>
-              <tr>
-                {% for col in df_metric.columns %}
-                  <th>{{ col }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for index, row in df_metric.iterrows %}
-              <tr>
-                {% for value in row %}
-                  <td>{{ value }}</td>
-                {% endfor %}
-              </tr>
-              {% endfor %}
-            </tbody>
-        
-          
-          </table>
-          
-    </div>
-
-    <div class="container">
-
-      <center>
-      
-    
-   <img src="{% static 'plots/ml_pred.png'%}" alt="">
-  
-    
-  </center>
-      </div>
-    <h1>Predictions for Future 30 days</h1>
-    <div class="container my-4">
-
-      <table>
-
-          <thead>
+<div class="container mt-5">
+    <h1 class="mb-4">Metric Table</h1>
+    <table class="table table-striped">
+        <thead>
             <tr>
-              {% for col in df_pred.columns %}
-                <th>{{ col }}</th>
-              {% endfor %}
+                {% for col in df.columns %}
+                    <th>{{ col }}</th>
+                {% endfor %}
             </tr>
-          </thead>
-          <tbody>
-            {% for index, row in df_pred.iterrows %}
-            <tr>
-              {% for value in row %}
-                <td>{{ value }}</td>
-              {% endfor %}
-            </tr>
+        </thead>
+        <tbody>
+            {% for index, row in df.iterrows %}
+                <tr>
+                    {% for value in row %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
             {% endfor %}
-          </tbody>
-      
-        
-        </table>
-        
-  </div>
-</center>
+        </tbody>
+    </table>
+</div>
+
+
+<div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-3">
+        <a href="train_data" class="btn btn-primary btn-block">Train Data</a>
+    </div>
+    <div class="col-md-3">
+        <a href="test_data" class="btn btn-primary btn-block">Test Data</a>
+    </div>
+    <div class="col-md-3">
+        <a href="pred_data" class="btn btn-primary btn-block">Predictions</a>
+    </div>
+</div>
 {% endblock content %}
