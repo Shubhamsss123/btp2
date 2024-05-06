@@ -1,4 +1,5 @@
 from django.shortcuts import render,HttpResponse 
+from django.http import HttpResponseNotFound
 import plotly.express as px
 from datetime import timedelta,datetime
 from .forms import DateForm
@@ -62,7 +63,7 @@ def regression_view(request):
         
         ts_column = 'Date'
         sep = ','
-        target = 'Discharge'
+        target = 'discharge'
 
         traindata = df.iloc[tr_index]
         testdata = df.iloc[val_index]
@@ -118,7 +119,7 @@ def regression_view(request):
 def plotly_view(request):
 
     df=pd.read_csv(r'C:\Users\Shubham\Documents\Academics\sem8\BTPI\btp_project\data.csv')
-    fig=px.line(df,x='Date',y='Discharge')
+    fig=px.line(df,x='Date',y='discharge')
 
 
 
@@ -400,34 +401,97 @@ def data_view(request):
     
     if request.method == 'POST':
         # Collect form data
+
         ml_task = request.POST.get('ml_task')  # Get the selected regression task
         train_split = request.POST.get('train_split')  # Get the selected train split
         seasonality = request.POST.get('season')  # Check if seasonality checkbox is checked
-        csv_file = request.FILES.get('csv_name')  # Get the uploaded CSV file
+        csv_file = request.FILES.get('csv_name') 
+        date_format = request.POST.get('date_format')
+        date_sep = request.POST.get('date_sep')
+
+        date_format=date_format.replace('/',date_sep)
+        
+       
+        
+        if not csv_file:
+            return HttpResponse('file not found ; Upload file again !')
+        file_name=csv_file.name
+
+        if 'csv' in file_name:
+            print('csv')
+            df=pd.read_csv(csv_file)
+        elif ('xls' in file_name) or ('xlsx' in file_name):
+            print('excel file')
+            df=pd.read_excel(file_name)
+        else:
+            return HttpResponseNotFound(f'{file_name} => this  file format not allowed , allowed files formats are .csv , .xls , .xlsx ')
+
+        if len(df.columns)>2:
+            return HttpResponse(f'more than two (2) columns are not allowed')
+         # Get the uploaded CSV file
+        print(type(train_split),train_split)
+        percentage_train=10
+
+        percentage_test=100-percentage_train
 
         print(ml_task,train_split,seasonality,csv_file)
-    
-        if csv_file:
+
+        if True:
             
 
             print(ml_task,train_split,seasonality,csv_file)
 
         
-            try:
-                df=pd.read_csv(csv_file)
-            except:
-                df=pd.read_excel(csv_file)
+         
 
             df.columns=['date','discharge']
-            df.set_index('date',drop=True,inplace=True)
 
+
+
+            from scipy.stats import skew, kurtosis
+            start_date=df['date'].values[0]
+            end_date=df['date'].values[-1]
+            average = df['discharge'].mean()
+
+            # Calculate standard deviation
+            std_dev = df['discharge'].std()
+
+            # Calculate skewness
+            skewness = skew(df['discharge'])
+
+            # Calculate kurtosis
+            kurt = kurtosis(df['discharge'])
+
+            # Calculate minimum and maximum values
+            minimum = df['discharge'].min()
+            maximum = df['discharge'].max()
+
+            # Calculate number of zeros
+            num_zeros = (df['discharge'] == 0).sum()
+
+            # Calculate percentage of zero rows
+            percent_zero_rows = (num_zeros / len(df)) * 100
+            # df['date']=df['date'].dt.strftime('%Y-%m-%d')
+
+            metrics_data = {
+                'Metric': ['Start Date', 'End Date', 'Average', 'Standard Deviation', 'Skewness', 'Kurtosis', 'Minimum', 'Maximum', 'Number of Zeros', '% of Zero Rows'],
+                'Value': [start_date, end_date, average, std_dev, skewness, kurt, minimum, maximum, num_zeros, percent_zero_rows]
+            }
+            
+            pd.DataFrame(metrics_data).to_csv('csv_files/all_info.csv',index=None)
+            # return HttpResponse('request')
+            # return render(request,'temp.html',{'df':df_metric})
+
+            df['date']=pd.to_datetime(df['date'],format=date_format)
+
+            print(df['date'].dtype)
+            df.set_index('date',drop=True,inplace=True)
             dates=df.index
             print(dates[-1],type(dates[-1]))
-            try:
-                future_30dates=[datetime.strptime(dates[-1], '%Y-%m-%d') + timedelta(days=i) for i in range(1, 31)]
-            except:
-                future_30dates=[dates[-1] + timedelta(days=i) for i in range(1, 31)]
+            
+            future_30dates=[dates[-1] + timedelta(days=i) for i in range(1, 31)]
 
+            # return HttpResponse(f'{percentage_test},{df.columns[0]} {df["date"].dtype}hi')
             train_len=int(df.shape[0]*int(train_split)/100)
         
 
@@ -638,7 +702,7 @@ def plotly_train(request):
         title="Train data ",
         labels={'date': 'Date', 'discharge': 'discharge label'}
     )
-    fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_train'], mode='lines', name='Predicted Discharge')
+    fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_train'], mode='lines', name='Predicted discharge')
 
     fig.update_layout(
         title={
@@ -677,7 +741,7 @@ def plotly_test(request):
         title="test data ",
         labels={'date': 'Date', 'discharge': 'discharge label'}
     )
-    fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_test'], mode='lines', name='Predicted Discharge')
+    fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_test'], mode='lines', name='Predicted discharge')
 
     fig.update_layout(
         title={
@@ -716,7 +780,7 @@ def plotly_pred(request):
         title="prediction data ",
         labels={'date': 'Date', 'discharge': 'discharge label'}
     )
-    # fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_test'], mode='lines', name='Predicted Discharge')
+    # fig.add_scatter(x=filtered_df['date'], y=filtered_df['pred_test'], mode='lines', name='Predicted discharge')
 
     fig.update_layout(
         title={

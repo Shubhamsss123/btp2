@@ -28,7 +28,7 @@
           <form action="/data" method="post" enctype="multipart/form-data">
               {% csrf_token %}
               <label for="form-select" style="font-weight: 300px;">Select Model</label>
-              <select name='ml_task' class="form-select" aria-label="Default select example">
+              <select name='ml_task' class="form-select" aria-label="Default select example" required>
                   <option value="lstm">Long Short Term Memory (LSTM)</option>
                   <option value="ann">Artificial Neural Network (ANN)</option>
                   <option value="rf">Random Forest Regressor (RF)</option>
@@ -36,19 +36,43 @@
               </select>
 
               <label for="form-select" style="font-weight: 300px;" class='mt-2'>Select Train Split</label>
-              <select name='train_split' class="form-select" aria-label="Default select example" id='split_id'>
-                  <option selected disabled>select train split</option>
+              <select name='train_split' class="form-select" aria-label="Default select example" id='split_id' required>
+                  {% comment %} <option selected disabled>select train split</option> {% endcomment %}
                   <option value="70">70</option>
-                  <option value="80">80</option>
+                  <option value="80" selected>80</option>
                   <option value="90">90</option>
                   <option value="100">100</option>
               </select>
               <br>
-              <p id="selectedValue"></p>
+              <p id="selectedValue">Test split ratio: 20</p>
+
               <strong>
-                  <label for="csv" style="font-weight: 300px;" class="mt-1">Upload data in csv/xls/xlsx file format</label>
+                <label for="date_format" style="font-weight: 300px;" class="mt-1">Date Format</label>
+            </strong>
+             
+
+              <select name="date_format" id="date_format" class="form-select" aria-label="Date Format" required>
+                {% comment %} <option value="">Select Date Format</option> {% endcomment %}
+                <option value="%d/%m/%Y" selected>DD/MM/YYYY (e.g., 06/05/2024)</option>
+                <option value="%Y/%m/%d">YYYY/MM/DD (e.g., 2024-05-06)</option>
+                <option value="%m/%d/%Y">MM/DD/YYYY (e.g., 05/06/2024)</option>
+                <!-- Add more options as needed -->
+            </select>
+
+            <strong>
+                <label for="date_sep" style="font-weight: 300px;" class="mt-1">Date Separator</label>
+            </strong>
+              <select name="date_sep" id="date_sep" class="form-select" aria-label="Date Format" required>
+                {% comment %} <option value="">Select Date sep</option> {% endcomment %}
+                <option value="/" selected>/ </option>
+                <option value=".">. </option>
+                <option value="-">- </option>
+                <!-- Add more options as needed -->
+            </select>
+              <strong>
+                  <label for="csv" style="font-weight: 300px;" class="mt-1" >Upload data in csv/xls/xlsx file format</label>
               </strong>
-              <input type="file" name="csv_name" accept=".csv, .xls, .xlsx" placeholder="" />
+              <input type="file" name="csv_name" id="csv_id" accept=".csv, .xls, .xlsx" placeholder="" required />
               <p><span style="color: red;">*</span> CSV or Excel file should contain only 2 columns: Date and Discharge</p>
               <p></p>
               <button type="submit" class="btn btn-primary" id="submitBtn">Upload!</button>
@@ -93,6 +117,12 @@
   });
 
   submitBtn.addEventListener('click', function() {
+
+    var fileInput = document.getElementById('csv_id');
+    if (fileInput.files.length === 0) {
+      alert('Please select a file.');
+      return;
+    }
 
     // document.getElementById('submitBtn').disabled = true;
     // Change the button color to secondary
