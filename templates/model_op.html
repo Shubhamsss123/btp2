@@ -4,9 +4,9 @@
 {% block content %}
 
 {% comment %} <p>[{{df.columns}}</p> {% endcomment %}
-
+<!-- <p><span style="color: red;">*</span>For more details refer to user manual </p> -->
 <div class="container mt-5">
-    <h1 class="mb-4">Metric Table</h1>
+    <h1 class="mb-4">Performance Table of {{model}} Model</h1>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -26,7 +26,7 @@
         </tbody>
     </table>
 </div>
-
+<p style="background-color: #cac3c3;color: black;"><span style="color: red; ">*</span>For more details refer to user manual </p>
 
 <div class="row">
     <div class="col-md-2"></div>
@@ -38,6 +38,18 @@
     </div>
     <div class="col-md-3">
         <a href="pred_data" class="btn btn-primary btn-block">Predictions</a>
+    </div>
+</div>
+<div class="row my-4">
+    <div class="col-md-2"></div>
+    <div class="col-md-3">
+        {% comment %} <a href="train_data" class="btn btn-primary btn-block">Train Data</a> {% endcomment %}
+    </div>
+    <div class="col-md-3">
+        <a href="scatter" class="btn btn-primary btn-block">Scatter Plot</a>
+    </div>
+    <div class="col-md-3">
+        {% comment %} <a href="pred_data" class="btn btn-primary btn-block">Predictions</a> {% endcomment %}
     </div>
 </div>
 {% endblock content %}

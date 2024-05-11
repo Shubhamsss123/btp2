@@ -5,11 +5,13 @@
 
 {% block content %}
 
-<center style="text-align: center;" class="m-2">
-    <div style="display: inline-block; background-color: aqua; padding: 10px;border-radius: 20px;">
-        <h1 style="color: rgb(99, 90, 90);">Machine Learning For Runoff Modeling</h1>
-    </div>
+<center>
+  <h1 style="color: rgb(6, 150, 35); background-color: rgb(168, 255, 255); border-radius: 20px; width: 350px;" class="p-2">Reserviour Inflow Prediction Using AI</h1>
+  <!-- <h1 style="color: rgb(6, 150, 35); background-color: rgb(168, 255, 255); border-radius: 20px; width: 350px;" class="p-4">Forecasting Rainfall: AI Approach for Precipitation Prediction</h1> -->
+
+  
 </center>
+
 
 
 
@@ -22,10 +24,43 @@
 
             <a href="/" style="color: black; text-decoration: none;font-size: larger;">&larr; Back to Home</a>
         </button>
+
+        <div class="container mt-3" style="box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm;background-color: aliceblue;">
+          <p id="selectedModel">Selected Model: </p>
+          <p id="selectedTrainSplit">Train Split: </p>
+      </div>
     </div>
+    
       <div class="col-md-4 p-2" style='box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm; background-color: aliceblue;'
       >
-          <form action="/data" method="post" enctype="multipart/form-data">
+      <div class="col-md d-none" id="info_id" mt-2>
+        <center>
+
+        <table class="table table-striped " >
+          <thead>
+              <tr style="width: 200px;">
+                  {% for col in df_all.columns %}
+                      <th >{{ col }}</th>
+                  {% endfor %}
+              </tr>
+          </thead>
+          <tbody>
+              {% for index, row in df_all.iterrows %}
+                  <tr>
+                      {% for value in row %}
+                          <td >{{ value }}</td>
+                      {% endfor %}
+                  </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+   
+    </center>
+    </div>
+      <div class="container" id="form_id">
+
+      
+          <form action="/data" method="post" enctype="multipart/form-data" id="form_id">
               {% csrf_token %}
               <label for="form-select" style="font-weight: 300px;">Select Model</label>
               <select name='ml_task' class="form-select" aria-label="Default select example" required>
@@ -46,52 +81,64 @@
               <br>
               <p id="selectedValue">Test split ratio: 20</p>
 
-              <strong>
+              <!-- <strong>
                 <label for="date_format" style="font-weight: 300px;" class="mt-1">Date Format</label>
             </strong>
              
 
               <select name="date_format" id="date_format" class="form-select" aria-label="Date Format" required>
-                {% comment %} <option value="">Select Date Format</option> {% endcomment %}
+                <option value="">Select Date Format</option> 
                 <option value="%d/%m/%Y" selected>DD/MM/YYYY (e.g., 06/05/2024)</option>
                 <option value="%Y/%m/%d">YYYY/MM/DD (e.g., 2024-05-06)</option>
                 <option value="%m/%d/%Y">MM/DD/YYYY (e.g., 05/06/2024)</option>
-                <!-- Add more options as needed -->
             </select>
 
             <strong>
-                <label for="date_sep" style="font-weight: 300px;" class="mt-1">Date Separator</label>
-            </strong>
+                <label for="date_sep" style="font-weight: 300px;" class="mt-1">Date Separator</label> -->
+            <!-- </strong>
               <select name="date_sep" id="date_sep" class="form-select" aria-label="Date Format" required>
-                {% comment %} <option value="">Select Date sep</option> {% endcomment %}
+                 <option value="">Select Date sep</option>
                 <option value="/" selected>/ </option>
                 <option value=".">. </option>
                 <option value="-">- </option>
-                <!-- Add more options as needed -->
             </select>
               <strong>
                   <label for="csv" style="font-weight: 300px;" class="mt-1" >Upload data in csv/xls/xlsx file format</label>
               </strong>
               <input type="file" name="csv_name" id="csv_id" accept=".csv, .xls, .xlsx" placeholder="" required />
               <p><span style="color: red;">*</span> CSV or Excel file should contain only 2 columns: Date and Discharge</p>
-              <p></p>
-              <button type="submit" class="btn btn-primary" id="submitBtn">Upload!</button>
+              <p></p> -->
+              <button type="submit" class="btn btn-primary" id="submitBtn">Run Model!</button>
               
           </form>
+        </div>
       </div>
-      <div class="col-md-4"></div>
+      <!-- <div class="col-md-4">
+      </div> -->
+        <div class="col-md-1"></div>
+        <div class="col-md-3 pt-4 d-none"  id="loadingSpinner">
+          <center>
+            <div class="container p-2" style="box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm;background-color: aliceblue;">
+
+              <p class="spinner-border text-primary "  >
+                
+              </p>
+              <h3 id='load_id' class="">Model is Building ...</h3>
+            </div>
+          </center>
+          
+      </div>
   </div>
 </div>
 
-<center>
+<!-- <center>
     <div class="container d-none" id='load_container' >
     
     <div class="row">
         <div class="col-md-4">
-            hi
-        </div>
+          </div>
         <div class="col-md-4 p-2" style="box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm;background-color: aliceblue;">
-            <p class="spinner-border text-primary  "  id="loadingSpinner">
+            <p class="spinner-border text-primary"  id="loadingSpinner">
         
         </p>
             <h3 id='load_id' class="">Model is Building ...</h3>
@@ -101,7 +148,7 @@
     </div>
     
 </div>
-</center>
+</center> -->
 
 <script>
   const trainSplitSelect = document.getElementById('split_id');
@@ -118,20 +165,36 @@
 
   submitBtn.addEventListener('click', function() {
 
-    var fileInput = document.getElementById('csv_id');
-    if (fileInput.files.length === 0) {
-      alert('Please select a file.');
-      return;
-    }
-
+ 
     // document.getElementById('submitBtn').disabled = true;
     // Change the button color to secondary
     document.getElementById('submitBtn').classList.remove('btn-primary');
     document.getElementById('submitBtn').classList.add('btn-secondary');
-
+    
+    document.getElementById('info_id').classList.remove('d-none');
+    document.getElementById('form_id').classList.add('d-none');
     loadingSpinner.classList.remove('d-none');
     load.classList.remove('d-none');
   });
+
+
+
+  function updateSelectedValues() {
+        var modelSelect = document.querySelector('select[name="ml_task"]');
+        var modelValue = modelSelect.options[modelSelect.selectedIndex].text;
+        var splitSelect = document.querySelector('select[name="train_split"]');
+        var splitValue = splitSelect.value;
+        document.getElementById('selectedModel').innerText = "Selected Model: " + modelValue;
+        document.getElementById('selectedTrainSplit').innerText = "Train Split: " + splitValue;
+    }
+
+    // Call the function initially
+    updateSelectedValues();
+
+    // Attach change event listeners to the selects to update the container when selections change
+    document.querySelector('select[name="ml_task"]').addEventListener('change', updateSelectedValues);
+    document.querySelector('select[name="train_split"]').addEventListener('change', updateSelectedValues);
+</script>
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>

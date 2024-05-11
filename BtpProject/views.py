@@ -1,4 +1,4 @@
-from django.shortcuts import render,HttpResponse 
+from django.shortcuts import render,HttpResponse ,redirect
 from django.http import HttpResponseNotFound
 import plotly.express as px
 from datetime import timedelta,datetime
@@ -22,13 +22,7 @@ from tensorflow.keras.optimizers import Adam
 def temp(request):
 
     return render(request,'model_op.html',{'r2':1})
-def home_page(request):
 
-    return render(request,'home.html')
-
-def model_selection_view(request):
-
-    return render(request,'model_select.html')
 
 def classification_view(request):
     return render(request,'classification.html')
@@ -156,17 +150,26 @@ def evaluate_model_df(model, X_train, y_train, X_test, y_test):
     metrics_test_rounded = {key: round(value, 3) for key, value in metrics_test.items()}
 
 
-    col1={"R2": "R2",
-        "MAPE": "MAPE",
-        "MSE": "MSE",
-        "NSE":"NSE",
-        "KGE":"KGE"}
+    # col1={"R2": "R2",
+    #     "MAPE": "MAPE",
+    #     "MSE": "MSE",
+    #     "NSE":"NSE",
+    #     "KGE":"KGE"}
+    col1 = {
+    "R2": "Coefficient of Determination (R²)",
+    "MAPE": "Mean Absolute Percentage Error (MAPE)",
+    "MSE": "Mean Squared Error (MSE)",
+    "NSE": "Nash-Sutcliffe Efficiency (NSE)",
+    "KGE": "Kling-Gupta Efficiency (KGE)"
+}
+
     df = pd.DataFrame([col1,metrics_train_rounded, metrics_test_rounded]).T
     # Create the DataFrame with transposed metrics
     # df = pd.DataFrame([col1,metrics_train, metrics_test]).T
     df.index.name = "Metric"  # Set index name
     df.columns = ["metrics ","Train", "Test"]  # Set column names
-
+    # df['performance']=np.array(["Coefficient of Determination (R²)", "Mean Absolute Percentage Error (MAPE)", "Mean Squared Error (MSE)", "Nash-Sutcliffe Efficiency (NSE)", "Kling-Gupta Efficiency (KGE)"])
+    # df.drop(['metrics'],axis=1,inplace=True)
     return df
 
     
@@ -286,8 +289,8 @@ def ann_bayesian(raw_seq,train_len):
     # Define the search space for Hyperopt
     ann_space = {
         'n_units': hp.choice('n_units', [8,16,32]),
-        # 'learning_rate': hp.uniform('learning_rate', 0.001, 0.01),
-        'learning_rate': hp.uniform('learning_rate', 0.001),
+        'learning_rate': hp.uniform('learning_rate', 0.001, 0.01),
+        # 'learning_rate': hp.choice('learning_rate', [0.001]),
         'n_steps':  hp.choice('n_steps', [3, 5, 7]),
         'n_features': 1,
 
@@ -302,7 +305,7 @@ def ann_bayesian(raw_seq,train_len):
     # Use the best hyperparameters to build the final ANN model
     best_params = {
         'n_units': [8,16,32][best['n_units']],
-        'learning_rate': best['learning_rate'],
+        'learning_rate':best['learning_rate'],
         'n_steps': [3, 5, 7][best['n_steps']],
         'n_features': 1,
         
@@ -397,22 +400,65 @@ def svm_bayesian(raw_seq,train_len):
 
     return svm_best_params
 
-def data_view(request):
-    
-    if request.method == 'POST':
-        # Collect form data
+def all_info_save(df):
+    from scipy.stats import skew, kurtosis
+    start_date=df['date'].values[0]
+    end_date=df['date'].values[-1]
+    average = df['discharge'].mean()
 
-        ml_task = request.POST.get('ml_task')  # Get the selected regression task
-        train_split = request.POST.get('train_split')  # Get the selected train split
-        seasonality = request.POST.get('season')  # Check if seasonality checkbox is checked
+    # Calculate standard deviation
+    std_dev = df['discharge'].std()
+
+    # Calculate skewness
+    skewness = skew(df['discharge'])
+
+    # Calculate kurtosis
+    kurt = kurtosis(df['discharge'])
+
+    # Calculate minimum and maximum values
+    minimum = df['discharge'].min()
+    maximum = df['discharge'].max()
+
+    # Calculate number of zeros
+    num_zeros = (df['discharge'] == 0).sum()
+
+    # Calculate percentage of zero rows
+    percent_zero_rows = (num_zeros / len(df)) * 100
+    # df['date']=df['date'].dt.strftime('%Y-%m-%d')
+
+    metrics_data = {
+        'Properties': ['Start Date', 'End Date', 'Average', 'Standard Deviation', 'Skewness', 'Kurtosis', 'Minimum', 'Maximum', 'Number of Zeros', '% of Zero Rows'],
+        'Value': [start_date, end_date, round(average, 3), round(std_dev, 3), round(skewness, 3), round(kurt, 3), minimum, maximum, num_zeros, round(percent_zero_rows, 3)]
+
+    }
+    
+    df_info=pd.DataFrame(metrics_data)
+    df_info.to_csv('csv_files/all_info.csv',index=None)
+    return df_info
+import os
+def home_page(request):
+    
+    if request.method=='POST':
+        photo = request.FILES['img_name']
+        # file_path = os.path.join('static', 'btp.jpg')
+        data=ImageClass(photo=photo)
+        data.save()
+        return redirect('/')
+
+        # return redirect('/')
+
+    return render(request,'home.html')
+
+
+def model_selection_view(request):
+
+    if request.method =='POST':
         csv_file = request.FILES.get('csv_name') 
         date_format = request.POST.get('date_format')
         date_sep = request.POST.get('date_sep')
-
         date_format=date_format.replace('/',date_sep)
         
-       
-        
+
         if not csv_file:
             return HttpResponse('file not found ; Upload file again !')
         file_name=csv_file.name
@@ -429,246 +475,242 @@ def data_view(request):
         if len(df.columns)>2:
             return HttpResponse(f'more than two (2) columns are not allowed')
          # Get the uploaded CSV file
-        print(type(train_split),train_split)
+        df.columns=['date','discharge']
+        df_info=all_info_save(df)
+        df.to_csv('csv_files/data.csv',index=None)
+        with open('csv_files/date.txt','w') as f:
+            f.write(date_format)
+        return render(request,'model_select.html',{'df_all':df_info})
+
+    df_info=pd.read_csv('csv_files/all_info.csv')
+    # return HttpResponse('model selection page not found !')
+    return render(request,'model_select.html',{'df_all':df_info})
+
+def data_view(request):
+    
+    if request.method == 'POST':
+        # Collect form data
+
+        ml_task = request.POST.get('ml_task')  # Get the selected regression task
+        train_split = request.POST.get('train_split')  # Get the selected train split
+        # seasonality = request.POST.get('season')  # Check if seasonality checkbox is checked
+        # csv_file = request.FILES.get('csv_name') 
+        with open('csv_files/date.txt','r') as f:
+            date_format = f.read()
+        # date_sep = request.POST.get('date_sep')
+
+        # date_format=date_format.replace('/',date_sep)
+        
+       
+        df=pd.read_csv('csv_files/data.csv')
+       
         percentage_train=10
 
         percentage_test=100-percentage_train
 
-        print(ml_task,train_split,seasonality,csv_file)
-
-        if True:
-            
-
-            print(ml_task,train_split,seasonality,csv_file)
-
-        
-         
-
-            df.columns=['date','discharge']
-
-
-
-            from scipy.stats import skew, kurtosis
-            start_date=df['date'].values[0]
-            end_date=df['date'].values[-1]
-            average = df['discharge'].mean()
-
-            # Calculate standard deviation
-            std_dev = df['discharge'].std()
-
-            # Calculate skewness
-            skewness = skew(df['discharge'])
-
-            # Calculate kurtosis
-            kurt = kurtosis(df['discharge'])
-
-            # Calculate minimum and maximum values
-            minimum = df['discharge'].min()
-            maximum = df['discharge'].max()
-
-            # Calculate number of zeros
-            num_zeros = (df['discharge'] == 0).sum()
-
-            # Calculate percentage of zero rows
-            percent_zero_rows = (num_zeros / len(df)) * 100
-            # df['date']=df['date'].dt.strftime('%Y-%m-%d')
-
-            metrics_data = {
-                'Metric': ['Start Date', 'End Date', 'Average', 'Standard Deviation', 'Skewness', 'Kurtosis', 'Minimum', 'Maximum', 'Number of Zeros', '% of Zero Rows'],
-                'Value': [start_date, end_date, average, std_dev, skewness, kurt, minimum, maximum, num_zeros, percent_zero_rows]
-            }
-            
-            pd.DataFrame(metrics_data).to_csv('csv_files/all_info.csv',index=None)
-            # return HttpResponse('request')
-            # return render(request,'temp.html',{'df':df_metric})
-
-            df['date']=pd.to_datetime(df['date'],format=date_format)
-
-            print(df['date'].dtype)
-            df.set_index('date',drop=True,inplace=True)
-            dates=df.index
-            print(dates[-1],type(dates[-1]))
-            
-            future_30dates=[dates[-1] + timedelta(days=i) for i in range(1, 31)]
-
-            # return HttpResponse(f'{percentage_test},{df.columns[0]} {df["date"].dtype}hi')
-            train_len=int(df.shape[0]*int(train_split)/100)
         
 
-            if ml_task=='ann' or ml_task=='lstm':
+        df['date']=pd.to_datetime(df['date'],format=date_format)
+
+        print(df['date'].dtype)
+        df.set_index('date',drop=True,inplace=True)
+        dates=df.index
+        print(dates[-1],type(dates[-1]))
+        
+        future_30dates=[dates[-1] + timedelta(days=i) for i in range(1, 31)]
+
+        # return HttpResponse(f'{percentage_test},{df.columns[0]} {df["date"].dtype}hi')
+        train_len=int(df.shape[0]*int(train_split)/100)
+
+        with open('csv_files/imp_dates.txt','w') as f:
+            f.write(",".join(date_i.strftime('%d/%m/%Y') for date_i in [dates[0],dates[train_len],dates[-1]]))
+
+        # start_date=dates[0]
+        # mid_date=dates[train_len]
+        # end_date=dates[-1]
+
+        if ml_task=='ann' or ml_task=='lstm':
+            
+            raw_seq=df['discharge'].values
+            
+            if ml_task=='lstm':
+
                 
-                raw_seq=df['discharge'].values
+                best_params=lstm_bayesian(raw_seq,train_len)
+                n_steps = best_params['n_steps']
+                n_features = best_params['n_features']
+                n_units = best_params['n_units']
+                activation = best_params['activation']
+                learning_rate = best_params['learning_rate']
+
+                # split into samples
+                X, y = split_sequence(raw_seq, n_steps)
+                X = X.reshape((X.shape[0], X.shape[1], n_features))
+
+                X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
                 
-                if ml_task=='lstm':
+                # define model
+                model = Sequential()
+                model.add(LSTM(n_units, activation=activation, input_shape=(n_steps, n_features)))
+                model.add(Dense(1))
 
-                    
-                    best_params=lstm_bayesian(raw_seq,train_len)
-                    n_steps = best_params['n_steps']
-                    n_features = best_params['n_features']
-                    n_units = best_params['n_units']
-                    activation = best_params['activation']
-                    learning_rate = best_params['learning_rate']
-
-                    # split into samples
-                    X, y = split_sequence(raw_seq, n_steps)
-                    X = X.reshape((X.shape[0], X.shape[1], n_features))
-
-                    X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
-                    
-                    # define model
-                    model = Sequential()
-                    model.add(LSTM(n_units, activation=activation, input_shape=(n_steps, n_features)))
-                    model.add(Dense(1))
-
-                    optimizer = Adam(learning_rate=learning_rate)
-                    model.compile(optimizer=optimizer, loss='mse')
-                    early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0, restore_best_weights=True)
+                optimizer = Adam(learning_rate=learning_rate)
+                model.compile(optimizer=optimizer, loss='mse')
+                early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0, restore_best_weights=True)
 
 
-                    # model.fit(X_train, y_train, epochs=10, verbose=1)
-                    model.fit(X_train, y_train, validation_split=0.3,epochs=500, verbose=0,callbacks=[early_stopping])
-
-                else:
-
-                    best_params=ann_bayesian(raw_seq,train_len)
-                    n_features = best_params['n_features']
-                    n_steps = best_params['n_steps']
-                
-                    n_units = best_params['n_units']
-                
-                    learning_rate = best_params['learning_rate']
-                
-
-                    X, y = split_sequence(raw_seq, n_steps)
-                    X = X.reshape((X.shape[0], X.shape[1], n_features))
-                    X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
-                    
-                    model = Sequential()
-                    model.add(Dense(units=n_units, activation='relu', input_shape=(n_steps,)))
-                    model.add(Dense(units=n_units, activation='relu'))
-                    model.add(Dense(units=1))
-
-                    optimizer = Adam(learning_rate=learning_rate)
-                    model.compile(optimizer=optimizer, loss='mse')
-                    early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0, restore_best_weights=True)
-
-                    # Fit the final model
-                    model.fit(X_train.reshape((X_train.shape[0], best_params['n_steps'])), y_train, validation_split=0.3,verbose=0, epochs=500,callbacks=[early_stopping])
+                # model.fit(X_train, y_train, epochs=10, verbose=1)
+                model.fit(X_train, y_train, validation_split=0.3,epochs=500, verbose=0,callbacks=[early_stopping])
 
             else:
 
-                raw_seq=df['discharge'].values
-
-                
-                if ml_task=='svm':
-                    
-                    svm_best_params=svm_bayesian(raw_seq,train_len)
-                    C=svm_best_params['C']
-                    kernel=svm_best_params['kernel']
-                    n_steps = best_params['n_steps']
-                    
-                    X, y = split_sequence(raw_seq, n_steps)
-                    X = X.reshape((X.shape[0], X.shape[1], n_features))
-                    X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
-                    model = SVR(C=C, kernel=kernel)
-                    model.fit(X_train, y_train)
-
-                else:
-
-                    rf_best_params=rf_bayesian(raw_seq,train_len)
-
-                    n_estimators=rf_best_params['n_estimators']
-                    max_features=rf_best_params['max_features']
-                    n_steps = rf_best_params['n_steps']
-                    
-                    X, y = split_sequence(raw_seq, n_steps)
-                    X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
-                    model = RandomForestRegressor(n_estimators=n_estimators,
-                                                    max_features=max_features,
-                                                    random_state=1)
-                    model.fit(X_train, y_train)
-
-              
-                model.fit(X_train,y_train)
-
-            model_dict={'lstm':" LSTM ",'ann':"Artificial Neural Network (ANN)",'rf':'Random Forest','svm':"Support Vector Machine"}
-            pred_train=model.predict(X_train)
-            pred=model.predict(X_test)
-
-            dates=dates[n_steps:]
-
-            date_train=dates[:train_len]
-            date_test=dates[train_len:]
+                best_params=ann_bayesian(raw_seq,train_len)
+                n_features = best_params['n_features']
+                n_steps = best_params['n_steps']
             
-            print(f'shapes :train {pred_train.shape} test {pred.shape}  {date_train.shape} {date_test.shape}')
-
-            df_metric=evaluate_model_df(model, X_train, y_train, X_test, y_test)
-        
-            # plt.plot(date_train[::300],y_train[::300],label='actual values')
-            # plt.plot(date_train[::300],pred_train[::300],c='r',label='prediction')
-            # plt.title(model_dict[ml_task]+" Train")
-            # plt.xlabel('per 300 days dates')
-            # plt.ylabel('discharge (m3/h)')
-            # plt.xticks(rotation=40)
+                n_units = best_params['n_units']
             
-            # plt.tight_layout()
-
-            # plt.legend()
-            # plt.savefig('BtpProject/static/plots/ml_train.png')
-            # plt.close()
-            print(pred_train.shape,f'pred train {date_train.shape} date_train  {y_train.shape} y_train,for lstm')
+                learning_rate = best_params['learning_rate']
             
-            pd.DataFrame({'date':date_train,'y_train':y_train,'pred_train':pred_train.flatten()}).to_csv(f'csv_files/train.csv',index=None)
-            pd.DataFrame({'date':date_test,'y_test':y_test,'pred_test':pred.flatten()}).to_csv(f'csv_files/test.csv',index=None)
-            # plt.figure(figsize=(5,7))
-            # fig.autofmt_xdate()
-            # plt.plot(date_test[::200],y_test[::200],label='actual values')
-            # plt.plot(date_test[::200],pred[::200],c='r',label='prediction')
-        
-            # plt.title(model_dict[ml_task]+" Test")
-            # plt.xlabel('per 200 days dates')
-            # plt.ylabel('discharge (m3/h)')
-            # plt.xticks(rotation=40)
-            # plt.legend()
-            # plt.tight_layout()
-            # plt.savefig('BtpProject/static/plots/ml_test.png')
-            # plt.close()
-            future_pred = []
-            last_n = X_test[-1].copy()
 
-            for i in range(30):
-                if ml_task == 'ann' or ml_task == 'lstm':
-                    y_pred = model.predict(last_n.reshape(1, n_steps, 1)).flatten()[0]
-                else:
-                    y_pred = model.predict(last_n.reshape(1, n_steps)).flatten()[0]
+                X, y = split_sequence(raw_seq, n_steps)
+                X = X.reshape((X.shape[0], X.shape[1], n_features))
+                X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
                 
-                future_pred.append(y_pred)
-                last_n = np.append(last_n[1:], y_pred)
+                model = Sequential()
+                model.add(Dense(units=n_units, activation='relu', input_shape=(n_steps,)))
+                model.add(Dense(units=n_units, activation='relu'))
+                model.add(Dense(units=1))
 
-          
-                
+                optimizer = Adam(learning_rate=learning_rate)
+                model.compile(optimizer=optimizer, loss='mse')
+                early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0, restore_best_weights=True)
 
-            df_pred=pd.DataFrame({'date':future_30dates,'pred':future_pred})
-            df_pred.to_csv(f'csv_files/pred.csv',index=None)
+                # Fit the final model
+                model.fit(X_train.reshape((X_train.shape[0], best_params['n_steps'])), y_train, validation_split=0.3,verbose=0, epochs=500,callbacks=[early_stopping])
 
-            df_metric.to_csv(f'csv_files/metric.csv',index=None)
-            # fig_train = px.scatter(x=date_train, y=y_train)
-            # plt.plot(df_pred['Date'],df_pred['prediction'],label='predicted values')
-           
-        
-            # plt.title(model_dict[ml_task]+" prediction")
-            # plt.xlabel('1 month')
-            # plt.ylabel('discharge (m3/h)')
-            # plt.xticks(rotation=40)
-            # plt.legend()
-            # plt.tight_layout()
-            # plt.savefig('BtpProject/static/plots/ml_pred.png')
-            # plt.close()
-            df1=pd.read_csv('csv_files/metric.csv')
-            return render(request,'model_op.html',{'df':df1})
-            # return HttpResponse('csv files saved')
         else:
-            return HttpResponse('csv file is not uploaded ')
+
+            raw_seq=df['discharge'].values
+
+            
+            if ml_task=='svm':
+                
+                svm_best_params=svm_bayesian(raw_seq,train_len)
+                n_features=svm_best_params['n_features']
+                C=svm_best_params['C']
+                kernel=svm_best_params['kernel']
+                n_steps = svm_best_params['n_steps']
+                
+                X, y = split_sequence(raw_seq, n_steps)
+                X = X.reshape((X.shape[0], X.shape[1], n_features))
+                X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
+                model = SVR(C=C, kernel=kernel)
+                X_train=np.squeeze(X_train,axis=-1)
+                X_test=np.squeeze(X_test,axis=-1)
+                print(f'X_train shape {X_train.shape} {X_test.shape},{y_train.shape},{y_test.shape}')
+                # return HttpResponse(X_train.shape)
+                model.fit(X_train, y_train)
+
+            else:
+
+                rf_best_params=rf_bayesian(raw_seq,train_len)
+
+                n_estimators=rf_best_params['n_estimators']
+                max_features=rf_best_params['max_features']
+                n_steps = rf_best_params['n_steps']
+                
+                X, y = split_sequence(raw_seq, n_steps)
+                X_train,X_test,y_train,y_test = X[:train_len, :],X[train_len:, :],y[:train_len],y[train_len:]
+                model = RandomForestRegressor(n_estimators=n_estimators,
+                                                max_features=max_features,
+                                                random_state=1)
+                model.fit(X_train, y_train)
+
+            
+            model.fit(X_train,y_train)
+
+        model_dict={'lstm':" LSTM ",'ann':"Artificial Neural Network (ANN)",'rf':'Random Forest','svm':"Support Vector Machine"}
+        pred_train=model.predict(X_train)
+        pred=model.predict(X_test)
+
+        dates=dates[n_steps:]
+
+        date_train=dates[:train_len]
+        date_test=dates[train_len:]
+        
+        print(f'shapes :train {pred_train.shape} test {pred.shape}  {date_train.shape} {date_test.shape}')
+
+        df_metric=evaluate_model_df(model, X_train, y_train, X_test, y_test)
+    
+        # plt.plot(date_train[::300],y_train[::300],label='actual values')
+        # plt.plot(date_train[::300],pred_train[::300],c='r',label='prediction')
+        # plt.title(model_dict[ml_task]+" Train")
+        # plt.xlabel('per 300 days dates')
+        # plt.ylabel('discharge (m3/h)')
+        # plt.xticks(rotation=40)
+        
+        # plt.tight_layout()
+
+        # plt.legend()
+        # plt.savefig('BtpProject/static/plots/ml_train.png')
+        # plt.close()
+        print(pred_train.shape,f'pred train {date_train.shape} date_train  {y_train.shape} y_train,for lstm')
+        
+        pd.DataFrame({'date':date_train,'y_train':y_train,'pred_train':pred_train.flatten()}).to_csv(f'csv_files/train.csv',index=None)
+        pd.DataFrame({'date':date_test,'y_test':y_test,'pred_test':pred.flatten()}).to_csv(f'csv_files/test.csv',index=None)
+        # plt.figure(figsize=(5,7))
+        # fig.autofmt_xdate()
+        # plt.plot(date_test[::200],y_test[::200],label='actual values')
+        # plt.plot(date_test[::200],pred[::200],c='r',label='prediction')
+    
+        # plt.title(model_dict[ml_task]+" Test")
+        # plt.xlabel('per 200 days dates')
+        # plt.ylabel('discharge (m3/h)')
+        # plt.xticks(rotation=40)
+        # plt.legend()
+        # plt.tight_layout()
+        # plt.savefig('BtpProject/static/plots/ml_test.png')
+        # plt.close()
+        future_pred = []
+        last_n = X_test[-1].copy()
+
+        for i in range(30):
+            if ml_task == 'ann' or ml_task == 'lstm':
+                y_pred = model.predict(last_n.reshape(1, n_steps, 1)).flatten()[0]
+            else:
+                y_pred = model.predict(last_n.reshape(1, n_steps)).flatten()[0]
+            
+            future_pred.append(y_pred)
+            last_n = np.append(last_n[1:], y_pred)
+
+        
+            
+
+        df_pred=pd.DataFrame({'date':future_30dates,'pred':future_pred})
+        df_pred.to_csv(f'csv_files/pred.csv',index=None)
+        with open('csv_files/imp_dates.txt','r') as f:
+            date_arr=f.read().split(',')
+        df_metric.columns=['performance metric',f'train data from {date_arr[0]} to {date_arr[1]}',f'test data from {date_arr[1]} to {date_arr[2]}']
+        df_metric.to_csv(f'csv_files/metric.csv',index=None)
+        # fig_train = px.scatter(x=date_train, y=y_train)
+        # plt.plot(df_pred['Date'],df_pred['prediction'],label='predicted values')
+        
+    
+        # plt.title(model_dict[ml_task]+" prediction")
+        # plt.xlabel('1 month')
+        # plt.ylabel('discharge (m3/h)')
+        # plt.xticks(rotation=40)
+        # plt.legend()
+        # plt.tight_layout()
+        # plt.savefig('BtpProject/static/plots/ml_pred.png')
+        # plt.close()
+        df1=pd.read_csv('csv_files/metric.csv')
+
+        return render(request,'model_op.html',{'df':df1,'model':model_dict[ml_task]})
+            
+        
+    return render(request,'model_select.html')
 
 def temp_op(request):
     df=pd.read_csv('csv_files/metric.csv')
@@ -798,3 +840,56 @@ def select_view(request):
     df = pd.read_csv('csv_files/metric.csv')
     context = {'df': df}
     return render(request, 'model_op.html', context)
+
+
+import pandas as pd
+import plotly.express as px
+
+def plotly_scatter(request):
+    # Load data
+    df = pd.read_csv('csv_files/train.csv')
+
+    # Get start and end dates from request parameters
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+
+    # Convert 'date' column to datetime
+    df['date'] = pd.to_datetime(df['date'])
+
+    # Filter DataFrame based on date range
+    if start and end:
+        start_date = pd.to_datetime(start)
+        end_date = pd.to_datetime(end)
+        filtered_df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+    else:
+        filtered_df = df
+
+    # Create scatter plot
+    fig = px.scatter(
+        filtered_df,
+        x='y_train',
+        y='pred_train',
+        title="Scatter Plot",
+        labels={'y_train': 'Observed', 'pred_train': 'Predicted'}
+    )
+
+    # Get maximum value from both x and y axes
+    max_value = max(filtered_df[['y_train', 'pred_train']].max())
+
+    # Set same scale on both axes
+    fig.update_xaxes(range=[0, max_value], scaleratio=1)
+    fig.update_yaxes(range=[0, max_value], scaleratio=1)
+
+    # Update layout
+    fig.update_layout(
+        title={'font_size': 24, 'xanchor': 'center', 'x': 0.5}
+    )
+
+    # Convert plot to HTML
+    chart = fig.to_html()
+
+    # Assuming DateForm is passed to the context
+    context = {'chart': chart, 'form': DateForm()}
+    return render(request, 'plotly_train.html', context)
+
+
