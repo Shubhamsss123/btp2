@@ -1,11 +1,11 @@
 Properties,Value
-Start Date,01-01-1980
-End Date,31-12-2019
-Average,0.291
-Standard Deviation,0.409
-Skewness,1.819
-Kurtosis,2.894
+Start Date,1980-01-01
+End Date,2019-12-31
+Average,0.576
+Standard Deviation,0.729
+Skewness,1.597
+Kurtosis,1.628
 Minimum,0.0
-Maximum,2.623875141
-Number of Zeros,2658
-% of Zero Rows,18.193
+Maximum,3.52991247177124
+Number of Zeros,4
+% of Zero Rows,0.027
