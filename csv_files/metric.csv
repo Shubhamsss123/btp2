@@ -1,6 +1,6 @@
-performance metric,train data from 01/01/1980 to 01/01/2012,test data from 01/01/2012 to 31/12/2019
-Coefficient of Determination (R²),0.873,0.833
-Mean Absolute Percentage Error (MAPE),62641600093.472,0.269
-Mean Squared Error (MSE),0.064,0.1
-Nash-Sutcliffe Efficiency (NSE),0.857,0.802
-Kling-Gupta Efficiency (KGE),0.908,0.875
+performance metric,train data from 01/01/1979 to 07/08/2012,test data from 07/08/2012 to 31/12/2020
+Coefficient of Determination (R²),0.956,0.675
+Mean Absolute Percentage Error (MAPE),0.111,0.34
+Mean Squared Error (MSE),4.603,35.196
+Nash-Sutcliffe Efficiency (NSE),0.947,0.549
+Kling-Gupta Efficiency (KGE),0.9,0.748

@@ -237,7 +237,7 @@ def lstm_bayesian(raw_seq,train_len):
 
     # Run Bayesian Optimization
     trials = Trials()
-    best = fmin(fn=lstm_hyperopt, space=lstm_space, algo=tpe.suggest, max_evals=1, trials=trials)
+    best = fmin(fn=lstm_hyperopt, space=lstm_space, algo=tpe.suggest, max_evals=1, trials=trials,rstate=np.random.default_rng(42))
 
     best_params = {
         'n_steps': [3, 5, 7][best['n_steps']],
@@ -298,7 +298,7 @@ def ann_bayesian(raw_seq,train_len):
 
     # Run Bayesian Optimization
     trials = Trials()
-    best = fmin(fn=ann_objective, space=ann_space, algo=tpe.suggest, max_evals=1, trials=trials)
+    best = fmin(fn=ann_objective, space=ann_space, algo=tpe.suggest, max_evals=1, trials=trials,rstate=np.random.default_rng(42))
 
     # print("Best hyperparameters:", best)
 
@@ -348,7 +348,7 @@ def rf_bayesian(raw_seq,train_len):
     }
     
     rf_trials = Trials()
-    rf_best = fmin(fn=rf_objective, space=rf_space, algo=tpe.suggest, max_evals=1, trials=rf_trials)
+    rf_best = fmin(fn=rf_objective, space=rf_space, algo=tpe.suggest, max_evals=1, trials=rf_trials,rstate=np.random.default_rng(42))
     rf_best_params = {
         'n_estimators': [50, 100, 150][rf_best['n_estimators']],
         'max_features': [2, 3, 4][rf_best['max_features']],
@@ -386,7 +386,7 @@ def svm_bayesian(raw_seq,train_len):
     }
 
     svm_trials = Trials()
-    svm_best = fmin(fn=svm_objective, space=svm_space, algo=tpe.suggest, max_evals=1, trials=svm_trials)
+    svm_best = fmin(fn=svm_objective, space=svm_space, algo=tpe.suggest, max_evals=1, trials=svm_trials,rstate=np.random.default_rng(42))
 
     # print("Best SVM hyperparameters:", svm_best)
 
