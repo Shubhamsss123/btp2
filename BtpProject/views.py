@@ -493,6 +493,7 @@ def data_view(request):
 
         ml_task = request.POST.get('ml_task')  # Get the selected regression task
         train_split = request.POST.get('train_split')  # Get the selected train split
+        n_days=int(request.POST.get('ndays'))
         # seasonality = request.POST.get('season')  # Check if seasonality checkbox is checked
         # csv_file = request.FILES.get('csv_name') 
         with open('csv_files/date.txt','r') as f:
@@ -517,7 +518,7 @@ def data_view(request):
         dates=df.index
         print(dates[-1],type(dates[-1]))
         
-        future_30dates=[dates[-1] + timedelta(days=i) for i in range(1, 31)]
+        future_ndates=[dates[-1] + timedelta(days=i) for i in range(1, n_days+1)]
 
         # return HttpResponse(f'{percentage_test},{df.columns[0]} {df["date"].dtype}hi')
         train_len=int(df.shape[0]*int(train_split)/100)
@@ -675,7 +676,7 @@ def data_view(request):
         future_pred = []
         last_n = X_test[-1].copy()
 
-        for i in range(30):
+        for i in range(n_days):
             if ml_task == 'ann' or ml_task == 'lstm':
                 y_pred = model.predict(last_n.reshape(1, n_steps, 1)).flatten()[0]
             else:
@@ -685,9 +686,9 @@ def data_view(request):
             last_n = np.append(last_n[1:], y_pred)
 
         
-            
+        print(f'lenth of n_dates {len(future_ndates)} lenth of future pred {len(future_pred)}')
 
-        df_pred=pd.DataFrame({'date':future_30dates,'pred':future_pred})
+        df_pred=pd.DataFrame({'date':future_ndates,'pred':future_pred})
         df_pred.to_csv(f'csv_files/pred.csv',index=None)
         with open('csv_files/imp_dates.txt','r') as f:
             date_arr=f.read().split(',')
