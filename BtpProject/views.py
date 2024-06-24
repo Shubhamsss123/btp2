@@ -9,10 +9,15 @@ import numpy as np
 import hydroeval as hy
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.callbacks import EarlyStopping
-
+import random
+random_seed = 42
+tf.random.set_seed(random_seed)
+np.random.seed(random_seed)
+random.seed(random_seed)
 from matplotlib import pyplot as plt
 from sklearn.metrics import r2_score,mean_squared_error,mean_absolute_percentage_error
 
@@ -246,6 +251,7 @@ def lstm_bayesian(raw_seq,train_len):
         'activation': ['relu', 'tanh'][best['activation']],
         'learning_rate': best['learning_rate']
     }
+    print('best params in lstm are',best_params)
     return best_params
 
 def ann_bayesian(raw_seq,train_len):
@@ -309,6 +315,7 @@ def ann_bayesian(raw_seq,train_len):
         'n_steps': [3, 5, 7][best['n_steps']],
         'n_features': 1,
         
+
 
     }
     return best_params         
