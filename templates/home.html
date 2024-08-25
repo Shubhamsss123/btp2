@@ -12,7 +12,7 @@
 <div class="container bg-image mt-2 mb-2">
 
   <center>
-    <h1 style="color: rgb(6, 150, 35); background-color: rgb(168, 255, 255); border-radius: 20px; width: 350px;" class="p-4">Reserviour Inflow Prediction Using AI</h1>
+    <h1 style="color: rgb(6, 150, 35); background-color: rgb(168, 255, 255); border-radius: 20px; width: 350px;" class="p-4">Reservoir Inflow Prediction Using AI</h1>
     <!-- <h1 style="color: rgb(6, 150, 35); background-color: rgb(168, 255, 255); border-radius: 20px; width: 350px;" class="p-4">Forecasting Rainfall: AI Approach for Precipitation Prediction</h1> -->
 
     
@@ -82,8 +82,14 @@
       Shubham Jadhav<br>
       Aditya Malhotra {% endcomment %}
       <br>
+      <strong>Name : </strong>{{ name }}
+      <br> 
+      <br>
+      <strong>Designation: </strong> {{ position }}
+      <br> 
+      <br>
       <strong>Version : </strong>1.00
-      <br> <br>
+      <br> 
       <strong>
 
         Copyright : 
@@ -93,22 +99,72 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<style>
-  .guide-section {
-    background-color: aliceblue;
-    /* padding: 15px; */
-    border-radius: 5px;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
-  }
-</style>
-
-
-<!-- 
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-  Launch demo modal
-</button> -->
+{% comment %} <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Upload Data</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Upload Data</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="p-4" style="box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm; background-color: aliceblue;" >
+                <form action="/model_selection" method="post" enctype="multipart/form-data" >
+                    {% csrf_token %}
+                    
+                    <strong>
+                        <label for="date_format" style="font-weight: 300px;" class="mt-1">Date Format</label>
+                    </strong>
+                    <select name="date_format" id="date_format" class="form-select" aria-label="Date Format" required>
+                        <option value="%d/%m/%Y" selected>DD/MM/YYYY (e.g., 06/05/2024)</option>
+                        <option value="%Y/%m/%d">YYYY/MM/DD (e.g., 2024-05-06)</option>
+                        <option value="%m/%d/%Y">MM/DD/YYYY (e.g., 05/06/2024)</option>
+                        <!-- Add more options as needed -->
+                    </select>
+                    
+                    <strong>
+                        <label for="date_sep" style="font-weight: 300px;" class="mt-1">Date Separator</label>
+                    </strong>
+                    <select name="date_sep" id="date_sep" class="form-select" aria-label="Date Format" required>
+                        <option value="/" selected>/ </option>
+                        <option value=".">. </option>
+                        <option value="-">- </option>
+                        <!-- Add more options as needed -->
+                    </select>
+                    
+                    <strong>
+                        <label for="csv" style="font-weight: 300px;" class="mt-1" >Upload data in csv/xls/xlsx file format</label>
+                    </strong>
+                    <input type="file" name="csv_name" id="csv_id" accept=".csv, .xls, .xlsx" placeholder="" required />
+                    <p><span style="color: red;">*</span> CSV or Excel file should contain only 2 columns: Date and Discharge</p>
+                    <p></p>
+                  </div>
+                  
+                  
+                  
+                  
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                  <!-- <button type="submit" class="btn btn-primary" id="submitBtn">Upload!</button> -->
+                  <button type="submit" class="btn btn-lg" style="background-color: rgb(28, 206, 28);font-weight: 600;color: rgb(92, 92, 92);">UPLOAD DATA</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+    </div>
+  </div>
+</div> {% endcomment %}
 
 <!-- Modal -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -165,6 +221,59 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<style>
+  .guide-section {
+    background-color: aliceblue;
+    /* padding: 15px; */
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
+  }
+</style>
+
+
+<!-- 
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+  Launch demo modal
+</button> -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+  Personal details
+</button>
+<!-- Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Upload Data</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="p-4" style="box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm; background-color: aliceblue;">
+            <form action="/input/user" method="post">
+                {% csrf_token %}
+                
+                <strong>
+                    <label for="name" style="font-weight: 300px;" class="mt-1">Name</label>
+                </strong>
+                <input type="text" name="name" id="name" class="form-control" placeholder="Enter your name" required />
+    
+                <strong>
+                    <label for="designation" style="font-weight: 300px;" class="mt-1">Designation</label>
+                </strong>
+                <input type="text" name="position" id="designation" class="form-control" placeholder="Enter your designation" required />
+            </div>
+        </div>
+    
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-lg" style="background-color: rgb(28, 206, 28); font-weight: 600; color: rgb(92, 92, 92);">Submit</button>
+        </form>
+    </div>
+    
+    </div>
+  </div>
+</div>
 
 <div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel1" aria-hidden="true">
   <div class="modal-dialog">
@@ -173,35 +282,59 @@
         <h1 class="modal-title fs-5" id="exampleModalLabel">Upload Image</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div class="p-4" style="box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm; background-color: aliceblue;" >
-          <form action="" method="post" enctype="multipart/form-data" >
-              {% csrf_token %}
-              
-              <!-- <strong>
-                  <label for="date_format" style="font-weight: 300px;" class="mt-1">Upload Image</label>
-              </strong> -->
-              
-             
-              
-              <strong>
-                  <label for="img" style="font-weight: 300px;" class="mt-1" >Upload Image in jpg/png/jpeg file format</label>
-              </strong>
-              <input type="file" name="img_name" id="img_id" accept=".jpg, .png, .jpeg" placeholder="" required />
-              <!-- <p><span style="color: red;">*</span> CSV or Excel file should contain only 2 columns: Date and Discharge</p> -->
-              <p></p>
+      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Upload Data</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
-            
-            
-            
+            <div class="modal-body">
+              <div class="p-4" style="box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); border-radius: 2mm; background-color: aliceblue;" >
+                <form action="/model_selection" method="post" enctype="multipart/form-data" >
+                    {% csrf_token %}
+                    
+                    <strong>
+                        <label for="date_format" style="font-weight: 300px;" class="mt-1">Date Format</label>
+                    </strong>
+                    <select name="date_format" id="date_format" class="form-select" aria-label="Date Format" required>
+                        <option value="%d/%m/%Y" selected>DD/MM/YYYY (e.g., 06/05/2024)</option>
+                        <option value="%Y/%m/%d">YYYY/MM/DD (e.g., 2024-05-06)</option>
+                        <option value="%m/%d/%Y">MM/DD/YYYY (e.g., 05/06/2024)</option>
+                        <!-- Add more options as needed -->
+                    </select>
+                    
+                    <strong>
+                        <label for="date_sep" style="font-weight: 300px;" class="mt-1">Date Separator</label>
+                    </strong>
+                    <select name="date_sep" id="date_sep" class="form-select" aria-label="Date Format" required>
+                        <option value="/" selected>/ </option>
+                        <option value=".">. </option>
+                        <option value="-">- </option>
+                        <!-- Add more options as needed -->
+                    </select>
+                    
+                    <strong>
+                        <label for="csv" style="font-weight: 300px;" class="mt-1" >Upload data in csv/xls/xlsx file format</label>
+                    </strong>
+                    <input type="file" name="csv_name" id="csv_id" accept=".csv, .xls, .xlsx" placeholder="" required />
+                    <p><span style="color: red;">*</span> CSV or Excel file should contain only 2 columns: Date and Discharge</p>
+                    <p></p>
+                  </div>
+                  
+                  
+                  
+                  
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                  <!-- <button type="submit" class="btn btn-primary" id="submitBtn">Upload!</button> -->
+                  <button type="submit" class="btn btn-lg" style="background-color: rgb(28, 206, 28);font-weight: 600;color: rgb(92, 92, 92);">UPLOAD DATA</button>
+              </form>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
-            <!-- <button type="submit" class="btn btn-primary" id="submitBtn">Upload!</button> -->
-            <button type="submit" class="btn btn-lg" style="background-color: rgb(28, 206, 28);font-weight: 600;color: rgb(92, 92, 92);">UPLOAD DATA</button>
-        </form>
+        </div>
       </div>
     </div>
   </div>

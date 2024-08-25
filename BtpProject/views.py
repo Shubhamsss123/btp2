@@ -3,7 +3,7 @@ from django.http import HttpResponseNotFound
 import plotly.express as px
 from datetime import timedelta,datetime
 from .forms import DateForm
-
+from BtpApp.views import UserModel
 import pandas as pd
 import numpy as np 
 import hydroeval as hy
@@ -450,10 +450,23 @@ def home_page(request):
         # file_path = os.path.join('static', 'btp.jpg')
         data=ImageClass(photo=photo)
         data.save()
-        return redirect('/')
+    user = UserModel.objects.first()  # Fetch the first user instance (or None if empty)
+
+    if user:
+        context = {
+            "name": user.name,
+            "position": user.position,
+        }
+    else:
+        context = {
+            "name": "N/A",
+            "position": "N/A",
+        }
+
+    return render(request, 'home.html', context)
 
         # return redirect('/')
-
+    
     return render(request,'home.html')
 
 

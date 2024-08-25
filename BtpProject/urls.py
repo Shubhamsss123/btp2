@@ -17,10 +17,12 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 from .views import *
 urlpatterns = [
+
     path("admin/", admin.site.urls),
+     path('input/', include('BtpApp.urls')),
     path("", home_page,name='home_name'),
     # path("classification", classification_view,name='cls_name'),
     path("tsa", regression_view,name='reg_name'),
@@ -33,4 +35,4 @@ urlpatterns = [
     path('temp',temp_op,name='temp_name'),
     path('scatter',plotly_scatter,name='scatter_name'),
 
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
